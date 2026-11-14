@@ -36,6 +36,15 @@ def create_app() -> FastAPI:
     )
     application.include_router(router)
 
+    @application.get("/")
+    async def root() -> dict[str, str]:
+        return {
+            "service": settings.app_name,
+            "version": application.version,
+            "docs": "/docs",
+            "health": "/health",
+        }
+
     @application.exception_handler(AppError)
     async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:
         return JSONResponse(
