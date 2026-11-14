@@ -11,5 +11,8 @@ def create_genai_client(settings: Settings) -> genai.Client:
         raise ConfigurationError("GEMINI_API_KEY is not configured")
     return genai.Client(
         api_key=api_key,
-        http_options=types.HttpOptions(timeout=int(settings.gemini_timeout_seconds * 1000)),
+        http_options=types.HttpOptions(
+            api_version="v1beta",
+            timeout=int(settings.gemini_timeout_seconds * 1000),
+        ),
     )
