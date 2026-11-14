@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import UTC, datetime
 from typing import TypeVar
 
 import httpx
@@ -44,8 +45,9 @@ EXTRACTION_INSTRUCTION = (
     "You extract interview booking details from the conversation. Required fields "
     "are name, email, interview_date (YYYY-MM-DD), and interview_time (HH:MM, 24-hour). "
     "Use null for values the user did not provide. Never invent names, emails, dates, "
-    "or times. Merge details from earlier turns with the latest message. List required "
-    "fields that are still unknown in missing_fields."
+    "or times. Merge details from earlier turns with the latest message. Resolve dates "
+    "without a year against today's date, choosing the next occurrence in the future. "
+    "List required fields that are still unknown in missing_fields."
 )
 
 ANSWER_INSTRUCTION = (
@@ -90,7 +92,12 @@ class GeminiLLM:
     async def extract_interview_booking(
         self, message: str, history: list[ChatMessage]
     ) -> InterviewBookingExtraction:
-        prompt = f"Conversation:\n{self._format_history(history)}\n\nLatest message:\n{message}"
+        today = datetime.now(UTC).date().isoformat()
+        prompt = (
+            f"Today's date: {today}\n\n"
+            f"Conversation:\n{self._format_history(history)}\n\n"
+            f"Latest message:\n{message}"
+        )
         response = await self._generate(
             contents=prompt,
             system_instruction=EXTRACTION_INSTRUCTION,
